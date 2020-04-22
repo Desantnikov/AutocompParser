@@ -1,8 +1,8 @@
 import asyncio
 import json
 import timeit
-from string import ascii_lowercase
 from itertools import permutations
+from string import ascii_lowercase
 
 from aiohttp import ClientSession
 from aiohttp_proxy import ProxyConnector
@@ -14,8 +14,8 @@ import db
 DB_Session = sessionmaker(bind=db.engine)
 db_session = DB_Session()
 
-cyryllic_letters = 'йцукенгшщзхъфывапролджэячсмитьбю' + ascii_lowercase
-queries = tuple([''.join(x) for x in permutations(cyryllic_letters, 3)])
+all_letters = 'йцукенгшщзхъфывапролджэячсмитьбю' + ascii_lowercase
+queries = tuple([''.join(x) for x in permutations(all_letters, 3)])
 
 possible_queries_amount, db_rows_amount = len(queries), db_session.query(db.Query).count()
 if possible_queries_amount != db_rows_amount:
@@ -26,7 +26,6 @@ if possible_queries_amount != db_rows_amount:
         try:
             num_rows_deleted = db_session.query(db.Query).delete()
             autocompletions = [db.Query(query) for query in queries]
-
 
             db_session.bulk_save_objects(autocompletions)
             db_session.commit()
@@ -41,10 +40,11 @@ if possible_queries_amount != db_rows_amount:
         print('Wrong input')
         exit()
 
-# list of random
+# these proxies are bad but free, better to update before launch
 proxies = ('socks4://77.93.42.134:46235', 'http://194.32.136.127:8081', 'http://91.206.30.218:3128',
            'http://31.135.150.30:8080', 'http://194.79.20.30:8080', 'https://85.223.157.204:40329',
-            'http://194.44.87.245:8080', 'https://188.163.170.130:41209', 'http://91.194.239.122:8080')
+           'http://194.44.87.245:8080', 'https://188.163.170.130:41209', 'http://91.194.239.122:8080')
+
 
 async def fetch_all(queries):
     tasks, sessions = [], []
@@ -56,7 +56,7 @@ async def fetch_all(queries):
         session = ClientSession(connector=connector)
         sessions.append(session)
 
-        for query in queries[start:start + 5]: # more than 5 requests from IP -> 429
+        for query in queries[start:start + 5]:  # more than 5 requests from IP -> 429
             task = asyncio.ensure_future(fetch(query, session))
             tasks.append(task)
         start += 5
@@ -91,7 +91,7 @@ async def fetch(query, session):
             db_session.commit()
 
             print('Status: + ; Query {}; Rsp: {}; Proxy: {}'.format(query.text, autocompletion_texts_list,
-                                                                               session._connector.proxy_url))
+                                                                    session._connector.proxy_url))
             return resp
 
     except Exception as e:
@@ -123,6 +123,3 @@ if __name__ == '__main__':
         queries = db_session.query(db.Query).join(db.Autocompletion, isouter=True).group_by(db.Query). \
             having(~func.count(db.Query.autocompletions)).all()
         make_fetching_iteration()
-
-
-
