@@ -10,5 +10,5 @@ multidict==4.7.5
 requests==2.23.0
 SQLAlchemy==1.3.16
 typing-extensions==3.7.4.2
-urllib3==1.25.9
+urllib3==1.26.17
 yarl==1.4.2
